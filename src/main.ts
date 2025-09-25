@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
   
   // Enable CORS for frontend integration
   app.enableCors({
@@ -11,8 +13,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  const port = process.env.PORT ?? 3001;
+  const port = configService.get<number>('PORT') || 3001;
   await app.listen(port);
   console.log(`Chess Backend is running on: http://localhost:${port}`);
+  console.log(`MongoDB URI: ${configService.get<string>('MONGODB_URI')?.substring(0, 50)}...`);
 }
 bootstrap();

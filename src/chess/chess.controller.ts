@@ -1,80 +1,90 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
-import type { GameState, MoveValidation } from './chess.service';
-import { ChessService } from './chess.service';
-import type { ChessOpening } from './data/opening-data';
+import type { GameState, MoveValidation } from './chess-mongo.service';
+import { ChessMongoService } from './chess-mongo.service';
+import { SeedService } from './seed.service';
+import type { ChessOpening } from './schemas/chess-opening.schema';
 import type { Square } from 'chess.js';
 
 @Controller('chess')
 export class ChessController {
-  constructor(private readonly chessService: ChessService) {}
+  constructor(
+    private readonly chessMongoService: ChessMongoService,
+    private readonly seedService: SeedService,
+  ) {}
 
   @Post('game')
-  createGame(@Body() body: { gameId: string }): GameState {
-    return this.chessService.createGame(body.gameId);
+  async createGame(@Body() body: { gameId: string }): Promise<GameState> {
+    return await this.chessMongoService.createGame(body.gameId);
   }
 
   @Get('game/:gameId')
-  getGameState(@Param('gameId') gameId: string): GameState {
-    return this.chessService.getGameState(gameId);
+  async getGameState(@Param('gameId') gameId: string): Promise<GameState> {
+    return await this.chessMongoService.getGameState(gameId);
   }
 
   @Put('game/:gameId/move')
-  makeMove(
+  async makeMove(
     @Param('gameId') gameId: string,
     @Body() body: { move: string },
-  ): MoveValidation {
-    return this.chessService.makeMove(gameId, body.move);
+  ): Promise<MoveValidation> {
+    return await this.chessMongoService.makeMove(gameId, body.move);
   }
 
   @Put('game/:gameId/reset')
-  resetGame(@Param('gameId') gameId: string): GameState {
-    return this.chessService.resetGame(gameId);
+  async resetGame(@Param('gameId') gameId: string): Promise<GameState> {
+    return await this.chessMongoService.resetGame(gameId);
   }
 
   @Post('game/:gameId/opening/:openingId')
-  loadOpening(
+  async loadOpening(
     @Param('gameId') gameId: string,
     @Param('openingId') openingId: string,
-  ): { success: boolean; error?: string; gameState?: GameState } {
-    return this.chessService.loadOpening(gameId, openingId);
+  ): Promise<{ success: boolean; error?: string; gameState?: GameState }> {
+    return await this.chessMongoService.loadOpening(gameId, openingId);
   }
 
   @Get('openings')
-  getAllOpenings(): ChessOpening[] {
-    return this.chessService.getAllOpenings();
+  async getAllOpenings(): Promise<ChessOpening[]> {
+    return await this.chessMongoService.getAllOpenings();
   }
 
   @Get('openings/:id')
-  getOpeningById(@Param('id') id: string): ChessOpening | undefined {
-    return this.chessService.getOpeningById(id);
+  async getOpeningById(@Param('id') id: string): Promise<ChessOpening | null> {
+    return await this.chessMongoService.getOpeningById(id);
   }
 
   @Get('openings/category/:category')
-  getOpeningsByCategory(@Param('category') category: string): ChessOpening[] {
-    return this.chessService.getOpeningsByCategory(category);
+  async getOpeningsByCategory(@Param('category') category: string): Promise<ChessOpening[]> {
+    return await this.chessMongoService.getOpeningsByCategory(category);
   }
 
   @Get('openings/difficulty/:difficulty')
-  getOpeningsByDifficulty(@Param('difficulty') difficulty: string): ChessOpening[] {
-    return this.chessService.getOpeningsByDifficulty(difficulty);
+  async getOpeningsByDifficulty(@Param('difficulty') difficulty: string): Promise<ChessOpening[]> {
+    return await this.chessMongoService.getOpeningsByDifficulty(difficulty);
   }
 
   @Delete('game/:gameId')
-  deleteGame(@Param('gameId') gameId: string): { success: boolean } {
-    const deleted = this.chessService.deleteGame(gameId);
+  async deleteGame(@Param('gameId') gameId: string): Promise<{ success: boolean }> {
+    const deleted = await this.chessMongoService.deleteGame(gameId);
     return { success: deleted };
   }
 
   @Get('game/:gameId/history')
-  getGameHistory(@Param('gameId') gameId: string): string[] {
-    return this.chessService.getGameHistory(gameId);
+  async getGameHistory(@Param('gameId') gameId: string): Promise<string[]> {
+    return await this.chessMongoService.getGameHistory(gameId);
   }
 
   @Get('game/:gameId/moves')
-  getPossibleMoves(
+  async getPossibleMoves(
     @Param('gameId') gameId: string,
     @Query('square') square?: Square,
-  ): string[] {
-    return this.chessService.getPossibleMoves(gameId, square);
+  ): Promise<string[]> {
+    return await this.chessMongoService.getPossibleMoves(gameId, square);
+  }
+
+  @Post('seed')
+  async seedDatabase(): Promise<{ message: string }> {
+    await this.seedService.seedOpenings();
+    return { message: 'Database seeded successfully!' };
   }
 }
