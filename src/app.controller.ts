@@ -6,21 +6,28 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getHello() {
+    return {
+      success: true,
+      message: this.appService.getHello()
+    };
   }
 
   @Get('api')
-  getApiInfo(): object {
+  getApiInfo() {
     return {
-      name: 'Chess Openings Tutorial API',
-      version: '1.0.0',
-      description: 'A NestJS backend for chess openings tutorial application',
-      endpoints: {
-        chess: '/chess',
-        openings: '/chess/openings',
-        game: '/chess/game',
-      },
+      success: true,
+      data: {
+        name: 'Chess Openings Tutorial API',
+        version: '1.0.0',
+        description: 'A NestJS backend for chess openings tutorial application',
+        endpoints: {
+          chess: '/chess',
+          openings: '/chess/openings',
+          game: '/chess/game',
+          auth: '/auth',
+        },
+      }
     };
   }
 }
