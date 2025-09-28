@@ -7,10 +7,17 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   
   // Enable CORS for frontend integration
+  const allowedOrigins = configService.get<string>('NODE_ENV') === 'production' 
+    ? ['https://yourdomain.com', 'https://www.yourdomain.com'] // Add your production domains
+    : true; // Allow all origins in development
+  
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5175', 'http://localhost:5174', 'http://localhost:8080'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true, // Allow cookies and authorization headers
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
 
   const port = configService.get<number>('PORT') || 3001;
