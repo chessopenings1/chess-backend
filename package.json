@@ -18,7 +18,17 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "ts-node src/scripts/seed-database.ts"
+    "seed": "ts-node src/scripts/seed-database.ts",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:start:prod": "pm2 start ecosystem.config.js --env production",
+    "pm2:start:staging": "pm2 start ecosystem.config.js --env staging",
+    "pm2:stop": "pm2 stop chess-backend",
+    "pm2:restart": "pm2 restart chess-backend",
+    "pm2:reload": "pm2 reload chess-backend",
+    "pm2:delete": "pm2 delete chess-backend",
+    "pm2:logs": "pm2 logs chess-backend",
+    "pm2:monit": "pm2 monit",
+    "pm2:status": "pm2 status"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
