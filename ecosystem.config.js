@@ -8,7 +8,7 @@ module.exports = {
       env: {
         NODE_ENV: 'development',
         PORT: 3001,
-        MONGODB_URI: 'mongodb://localhost:27017/chess-backendmongodb+srv://chessopenings1_db_user:1Q1f3QFtbtu5vEth@chess-dev.hr41aeu.mongodb.net/?retryWrites=true&w=majority&appName=Chess-dev',
+        MONGODB_URI: 'mongodb+srv://chessopenings1_db_user:1Q1f3QFtbtu5vEth@chess-dev.hr41aeu.mongodb.net/?retryWrites=true&w=majority&appName=Chess-dev',
         JWT_SECRET: 'chessopeningssecret'
       },
       env_production: {
