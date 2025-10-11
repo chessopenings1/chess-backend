@@ -23,8 +23,7 @@ export class ChessOpeningController {
     const openings = await this.chessOpeningService.findAll();
     return {
       success: true,
-      data: ["Foo"],
-      // data: openings,
+      data: openings,
       count: openings.length
     };
   }
