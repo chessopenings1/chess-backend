@@ -3,6 +3,8 @@ set -e
 
 echo "===== After Install Hook ====="
 
+sudo chown -R ubuntu:ubuntu /var/www/chess-backend
+
 # Navigate to application directory
 cd /var/www/chess-backend || exit
 
