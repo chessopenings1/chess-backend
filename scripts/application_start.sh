@@ -14,7 +14,7 @@ fi
 
 # Start the application with PM2
 echo "Starting chess-backend application with PM2..."
-pm2 start ecosystem.config.js --env production
+pm2 start ecosystem.config.js --env development
 
 # Save PM2 process list
 echo "Saving PM2 process list..."
