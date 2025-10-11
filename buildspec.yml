@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo Installing dependencies...
+      - npm ci
+  
+  pre_build:
+    commands:
+      - echo Pre-build phase - checking environment...
+      - node --version
+      - npm --version
+  
+  build:
+    commands:
+      - echo Building application...
+      - npm run build
+      - echo Build completed successfully.
+  
+  post_build:
+    commands:
+      - echo Post-build phase completed.
+
+artifacts:
+  files:
+    - '**/*'
+  exclude-paths:
+    - node_modules/**/*
+    - .git/**/*
+    - .gitignore
+    - README.md
+    - '*.md'
