@@ -12,17 +12,22 @@ export class ChessOpeningService {
   ) {}
 
   async create(createChessOpeningDto: CreateChessOpeningDto): Promise<ChessOpening> {
-    // Trim whitespace from name
-    const trimmedName = createChessOpeningDto.name.trim();
+    // Check if opening with this slug already exists
+    const existingOpening = await this.chessOpeningModel.findOne({
+      slug: createChessOpeningDto.slug
+    }).exec();
+    
+    if (existingOpening) {
+      throw new ConflictException(`Chess opening with slug "${createChessOpeningDto.slug}" already exists`);
+    }
     
     try {
-      const openingData = {
-        ...createChessOpeningDto,
-        name: trimmedName
-      };
-      const createdOpening = new this.chessOpeningModel(openingData);
+      const createdOpening = new this.chessOpeningModel(createChessOpeningDto);
       return await createdOpening.save();
     } catch (error) {
+      if (error.code === 11000) {
+        throw new ConflictException('Chess opening with this slug already exists');
+      }
       throw error;
     }
   }
@@ -60,5 +65,46 @@ export class ChessOpeningService {
     if (!result) {
       throw new NotFoundException(`Chess opening with ID ${id} not found`);
     }
+  }
+
+  async findByColour(colour: 'white' | 'black'): Promise<ChessOpening[]> {
+    return await this.chessOpeningModel.find({ Colour: colour }).exec();
+  }
+
+  async findBySlug(slug: string): Promise<ChessOpening> {
+    const opening = await this.chessOpeningModel.findOne({ slug }).exec();
+    if (!opening) {
+      throw new NotFoundException(`Chess opening with slug "${slug}" not found`);
+    }
+    return opening;
+  }
+
+  async searchByName(searchTerm: string): Promise<ChessOpening[]> {
+    return await this.chessOpeningModel.find({
+      Opening: { $regex: searchTerm, $options: 'i' }
+    }).exec();
+  }
+
+  async findByTags(tags: string[]): Promise<ChessOpening[]> {
+    return await this.chessOpeningModel.find({
+      tags: { $in: tags }
+    }).exec();
+  }
+
+  async foo(): Promise<string> {
+    const openings =  await this.chessOpeningModel.find().exec();
+    openings.forEach(async opening => {
+      opening.moves_length = opening.moves_list.length;
+      opening['Num Games'] = +opening['Num Games'];
+      opening["Perf Rating"] = +opening["Perf Rating"];
+      opening["Avg Player"] = +opening["Avg Player"];
+      opening["Player Win %"] = +opening["Player Win %"];
+      opening["Draw %"] = +opening["Draw %"];
+      opening["Opponent Win %"] = +opening["Opponent Win %"];
+      opening["White_win%"] = +opening["White_win%"];
+      opening["Black_win%"] = +opening["Black_win%"];
+      await this.chessOpeningModel.findByIdAndUpdate(opening._id, opening).exec();
+    });
+    return "foo";
   }
 }

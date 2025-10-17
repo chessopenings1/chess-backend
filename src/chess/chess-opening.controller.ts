@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { ChessOpeningService } from './chess-opening.service';
 import { CreateChessOpeningDto } from './dto/create-opening.dto';
 import { UpdateChessOpeningDto } from './dto/update-opening.dto';
@@ -28,6 +28,15 @@ export class ChessOpeningController {
     };
   }
 
+  @Get('foo')
+  async foo() {
+    const bar = await this.chessOpeningService.foo();
+    return {
+      success: true,
+      data: bar
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const opening = await this.chessOpeningService.findOne(id);
@@ -54,6 +63,46 @@ export class ChessOpeningController {
     return {
       success: true,
       message: 'Chess opening deleted successfully'
+    };
+  }
+
+  @Get('colour/:colour')
+  async findByColour(@Param('colour') colour: 'white' | 'black') {
+    const openings = await this.chessOpeningService.findByColour(colour);
+    return {
+      success: true,
+      data: openings,
+      count: openings.length
+    };
+  }
+
+  @Get('slug/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    const opening = await this.chessOpeningService.findBySlug(slug);
+    return {
+      success: true,
+      data: opening
+    };
+  }
+
+  @Get('search')
+  async searchByName(@Query('q') searchTerm: string) {
+    const openings = await this.chessOpeningService.searchByName(searchTerm);
+    return {
+      success: true,
+      data: openings,
+      count: openings.length
+    };
+  }
+
+  @Get('tags')
+  async findByTags(@Query('tags') tags: string) {
+    const tagArray = tags.split(',').map(tag => tag.trim());
+    const openings = await this.chessOpeningService.findByTags(tagArray);
+    return {
+      success: true,
+      data: openings,
+      count: openings.length
     };
   }
 }
