@@ -18,4 +18,4 @@ echo "Cleaning up old application files..."
 find . -maxdepth 1 ! -name 'node_modules' ! -name '.' ! -name '..' -exec rm -rf {} + || true
 
 echo "Before Install completed successfully."
-
+# foo
