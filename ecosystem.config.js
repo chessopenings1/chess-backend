@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'chess-backend',
-      script: 'dist/main.js',
+      script: 'dist/src/main.js',
       instances: 1, // or 'max' to use all CPU cores
       exec_mode: 'cluster',
       env: {
