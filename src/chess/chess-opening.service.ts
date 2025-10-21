@@ -4,6 +4,13 @@ import { Model } from 'mongoose';
 import { ChessOpening, ChessOpeningDocument } from './schemas/chess-opening.schema';
 import { CreateChessOpeningDto } from './dto/create-opening.dto';
 import { UpdateChessOpeningDto } from './dto/update-opening.dto';
+import fs from "fs";
+import streamJsonPkg from "stream-json";
+import streamArrayPkg from "stream-json/streamers/StreamArray.js";
+import slugify from 'slugify';
+
+const { parser } = streamJsonPkg;
+const { streamArray } = streamArrayPkg;
 
 @Injectable()
 export class ChessOpeningService {
@@ -92,19 +99,23 @@ export class ChessOpeningService {
   }
 
   async foo(): Promise<string> {
-    const openings =  await this.chessOpeningModel.find().exec();
-    openings.forEach(async opening => {
-      opening.moves_length = opening.moves_list.length;
-      opening['Num Games'] = +opening['Num Games'];
-      opening["Perf Rating"] = +opening["Perf Rating"];
-      opening["Avg Player"] = +opening["Avg Player"];
-      opening["Player Win %"] = +opening["Player Win %"];
-      opening["Draw %"] = +opening["Draw %"];
-      opening["Opponent Win %"] = +opening["Opponent Win %"];
-      opening["White_win%"] = +opening["White_win%"];
-      opening["Black_win%"] = +opening["Black_win%"];
-      await this.chessOpeningModel.findByIdAndUpdate(opening._id, opening).exec();
-    });
+    const inputFile = "./lichess_db_puzzle-1.json";
+    
+    const readStream = fs.createReadStream(inputFile);
+    
+    const pipeline = readStream.pipe(parser()).pipe(streamArray());
+
+    let first = true;
+    let count = 0;
+
+    for await (const { value } of pipeline) {
+      count++
+      while (count < 10000) {
+        
+      }
+      // console.log(value);
+    }
+    
     return "foo";
   }
 }

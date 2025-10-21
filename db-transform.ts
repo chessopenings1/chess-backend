@@ -1,3 +1,4 @@
+import axios from "axios";
 import fs from "fs";
 import slugify from "slugify";
 import streamJsonPkg from "stream-json";
@@ -7,8 +8,8 @@ import streamArrayPkg from "stream-json/streamers/StreamArray.js";
 const { parser } = streamJsonPkg;
 const { streamArray } = streamArrayPkg;
 
-const inputFile = "openings.json";
-const outputFile = "openings-1.json";
+const inputFile = "lichess_db_puzzle.json";
+const outputFile = "lichess_db_puzzle-1.json";
 
 async function transformJson() {
   const readStream = fs.createReadStream(inputFile);
@@ -21,25 +22,21 @@ async function transformJson() {
   let count = 0;
 
   for await (const { value } of pipeline) {
-    // ✅ Example transformation logic:
-    // (Modify this part for your actual needs)
-    value.moves_list = JSON.parse(value.moves_list.replace(/'/g, '"'));
-    for (let i = 0; i < value.moves_list.length; i++) {
-        value.moves_list[i] = value.moves_list[i].includes(".") ? value.moves_list[i].split(".")[1] : value.moves_list[i];
+    if (first) console.log(value);
+
+    value.isOpening = value.OpeningTags == "" ? false : true;
+    value.Themes = value.Themes.split(",").map(theme => theme.trim());
+
+    if (value.isOpening) {
+      console.log(value.OpeningTags);
+      const openings = value.OpeningTags.split(" ");
+      const openingName = openings[openings.length - 1];
+      const openingSlug = slugify(openingName, { lower: true }).replaceAll("_", "-");
+      console.log(openingSlug);
+      const opening = await axios.get(`https://api.chess.com/openings/slug/${openingSlug}`);
+      console.log(opening.data);
     }
-    delete value[""]
-    delete value["ECO"]
-    delete value["Last Played"]
-    delete value["White_Wins"]
-    delete value["Black_Wins"]
-    delete value["White_odds"]
-    for (const key in value) {
-        if (/^move.*[bw]$/.test(key)) {
-            delete value[key];
-        }
-    }
-    value.slug = slugify(value.Opening).toLowerCase();
-    value.tags = value.Opening.split(",").map(tag => tag.trim());
+
     if (!first) writeStream.write(",\n");
     writeStream.write("  " + JSON.stringify(value, null, 2));
 

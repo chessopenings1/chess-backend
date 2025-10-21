@@ -3,12 +3,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChessOpeningController } from './chess-opening.controller';
 import { ChessOpeningService } from './chess-opening.service';
 import { ChessOpening, ChessOpeningSchema } from './schemas/chess-opening.schema';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: ChessOpening.name, schema: ChessOpeningSchema },
     ]),
+    AuthModule,  // Import AuthModule to use JWT authentication
   ],
   controllers: [ChessOpeningController],
   providers: [ChessOpeningService],
