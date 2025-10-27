@@ -11,8 +11,8 @@ export class User {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
+  @Prop()
+  password?: string;
 
   @Prop({ default: false })
   isEmailVerified: boolean;
@@ -22,6 +22,15 @@ export class User {
 
   @Prop()
   emailVerificationExpires?: Date;
+
+  @Prop()
+  googleId?: string;
+
+  @Prop()
+  profilePicture?: string;
+
+  @Prop({ default: 'local' })
+  authProvider: string; // 'local' or 'google'
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

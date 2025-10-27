@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { SignupDto, LoginDto, ResendVerificationDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto } from './dto/auth.dto';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +36,16 @@ export class AuthService {
     
     const user = await this.userService.findByEmail(email);
     if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if user is Google OAuth user
+    if (user.authProvider === 'google') {
+      throw new BadRequestException('Please use Google Sign-In for this account');
+    }
+
+    // Check if user has a password
+    if (!user.password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -88,5 +99,60 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified,
       },
     };
+  }
+
+  async googleAuth(googleAuthDto: GoogleAuthDto) {
+    const { credential } = googleAuthDto;
+
+    try {
+      // Verify the Google ID token
+      const client = new OAuth2Client();
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID, // You'll need to set this in your .env
+      });
+
+      const payload = ticket.getPayload();
+      
+      if (!payload) {
+        throw new UnauthorizedException('Invalid Google token');
+      }
+
+      const { sub: googleId, email, name, picture } = payload;
+
+      if (!email || !name || !googleId) {
+        throw new BadRequestException('Invalid Google token payload');
+      }
+
+      // Find or create user
+      const user = await this.userService.createOrUpdateGoogleUser(
+        googleId,
+        email,
+        name,
+        picture
+      );
+
+      // Generate JWT token
+      const jwtPayload = { email: user.email, sub: (user as any)._id };
+      const accessToken = this.jwtService.sign(jwtPayload);
+
+      return {
+        success: true,
+        access_token: accessToken,
+        user: {
+          id: (user as any)._id,
+          name: user.name,
+          email: user.email,
+          isEmailVerified: user.isEmailVerified,
+          profilePicture: user.profilePicture,
+          authProvider: user.authProvider,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Google authentication failed');
+    }
   }
 }

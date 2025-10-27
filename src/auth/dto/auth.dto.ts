@@ -26,3 +26,9 @@ export class ResendVerificationDto {
   @IsEmail()
   email: string;
 }
+
+export class GoogleAuthDto {
+  @IsNotEmpty()
+  @IsString()
+  credential: string; // Google ID token
+}

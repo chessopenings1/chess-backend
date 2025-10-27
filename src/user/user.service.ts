@@ -89,4 +89,33 @@ export class UserService {
     return Math.random().toString(36).substring(2, 15) + 
            Math.random().toString(36).substring(2, 15);
   }
+
+  async createOrUpdateGoogleUser(googleId: string, email: string, name: string, profilePicture?: string): Promise<User> {
+    const existingUser = await this.userModel.findOne({ email });
+    
+    if (existingUser) {
+      // Update existing user with Google info
+      existingUser.googleId = googleId;
+      existingUser.authProvider = 'google';
+      existingUser.profilePicture = profilePicture;
+      existingUser.isEmailVerified = true; // Google accounts are pre-verified
+      return existingUser.save();
+    }
+
+    // Create new user with Google OAuth
+    const user = new this.userModel({
+      name,
+      email,
+      googleId,
+      profilePicture,
+      authProvider: 'google',
+      isEmailVerified: true, // Google accounts are pre-verified
+    });
+
+    return user.save();
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userModel.findOne({ googleId }).exec();
+  }
 }

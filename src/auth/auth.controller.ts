@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignupDto, LoginDto, ResendVerificationDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -24,5 +24,10 @@ export class AuthController {
   @Get('verify-email/:token')
   async verifyEmail(@Param('token') token: string) {
     return this.authService.verifyEmail(token);
+  }
+
+  @Post('google')
+  async googleAuth(@Body(ValidationPipe) googleAuthDto: GoogleAuthDto) {
+    return this.authService.googleAuth(googleAuthDto);
   }
 }
