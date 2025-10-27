@@ -5,8 +5,9 @@ export class SolvePuzzleDto {
   @IsNotEmpty()
   puzzleId: string; // MongoDB ObjectId of the puzzle
 
-  @IsBoolean()
-  success: boolean; // Whether the user solved it correctly
+  @IsNumber()
+  @Min(0)
+  success: number; // 0 (lose), 1 (win), 0.5 (draw)
 
   @IsNumber()
   @Min(0)

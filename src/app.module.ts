@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ChessOpeningModule } from './chess/chess-opening.module';
 import { PuzzlesModule } from './puzzles/puzzles.module';
+import { StockfishModule } from './stockfish/stockfish.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PuzzlesModule } from './puzzles/puzzles.module';
     AuthModule,
     ChessOpeningModule,
     PuzzlesModule,
+    StockfishModule,
   ],
   controllers: [AppController],
   providers: [AppService],

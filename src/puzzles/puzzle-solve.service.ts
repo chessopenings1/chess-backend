@@ -67,7 +67,7 @@ export class PuzzleSolveService {
     const opponent = this.glicko.makePlayer(puzzleRating, 350, 0.06);
 
     // Update rating based on result (1 = win, 0 = loss)
-    const score = solvePuzzleDto.success ? 1 : 0;
+    const score = solvePuzzleDto.success;
     this.glicko.updateRatings([[player, opponent, score]]);
 
     const userRatingAfter = Math.round(player.getRating());
