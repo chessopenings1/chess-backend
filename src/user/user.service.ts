@@ -10,7 +10,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async createUser(name: string, email: string, password: string): Promise<User> {
+  async createUser(name: string, email: string, password: string, isAdmin: boolean = false): Promise<User> {
     // Check if user already exists
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
@@ -31,6 +31,7 @@ export class UserService {
       password: hashedPassword,
       emailVerificationToken,
       emailVerificationExpires,
+      isAdmin: isAdmin || false,
     });
 
     return user.save();
@@ -117,5 +118,22 @@ export class UserService {
 
   async findByGoogleId(googleId: string): Promise<User | null> {
     return this.userModel.findOne({ googleId }).exec();
+  }
+
+  async updateUserToAdmin(email: string, password?: string): Promise<User> {
+    const user = await this.userModel.findOne({ email }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isAdmin = true;
+    
+    // Update password if provided
+    if (password) {
+      const saltRounds = 10;
+      user.password = await bcrypt.hash(password, saltRounds);
+    }
+    
+    return user.save();
   }
 }

@@ -31,6 +31,9 @@ export class User {
 
   @Prop({ default: 'local' })
   authProvider: string; // 'local' or 'google'
+
+  @Prop({ default: false })
+  isAdmin: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

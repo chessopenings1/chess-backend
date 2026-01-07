@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto, AdminSignupDto, AdminLoginDto } from './dto/auth.dto';
 import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
@@ -12,9 +12,9 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto) {
-    const { name, email, password } = signupDto;
+    const { name, email, password, isAdmin } = signupDto;
     
-    const user = await this.userService.createUser(name, email, password);
+    const user = await this.userService.createUser(name, email, password, isAdmin || false);
     
     // In a real application, you would send an email here
     // For now, we'll just return the verification token
@@ -26,6 +26,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         isEmailVerified: user.isEmailVerified,
+        isAdmin: user.isAdmin,
       },
       verificationToken: user.emailVerificationToken, // Remove this in production
     };
@@ -69,6 +70,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         isEmailVerified: user.isEmailVerified,
+        isAdmin: user.isAdmin,
       },
     };
   }
@@ -146,6 +148,7 @@ export class AuthService {
           isEmailVerified: user.isEmailVerified,
           profilePicture: user.profilePicture,
           authProvider: user.authProvider,
+          isAdmin: user.isAdmin,
         },
       };
     } catch (error) {
@@ -154,5 +157,93 @@ export class AuthService {
       }
       throw new UnauthorizedException('Google authentication failed');
     }
+  }
+
+  async adminSignup(adminSignupDto: AdminSignupDto) {
+    const { name, email, password } = adminSignupDto;
+    
+    // Check if user already exists
+    const existingUser = await this.userService.findByEmail(email);
+    
+    if (existingUser) {
+      // Update existing user to admin and update password
+      const updatedUser = await this.userService.updateUserToAdmin(email, password);
+      
+      return {
+        success: true,
+        message: 'User updated to admin successfully.',
+        user: {
+          id: (updatedUser as any)._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          isEmailVerified: updatedUser.isEmailVerified,
+          isAdmin: updatedUser.isAdmin,
+        },
+      };
+    }
+    
+    // Create new admin user
+    const user = await this.userService.createUser(name, email, password, true);
+    
+    return {
+      success: true,
+      message: 'Admin user created successfully. Please check your email for verification.',
+      user: {
+        id: (user as any)._id,
+        name: user.name,
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
+        isAdmin: user.isAdmin,
+      },
+      verificationToken: user.emailVerificationToken, // Remove this in production
+    };
+  }
+
+  async adminLogin(adminLoginDto: AdminLoginDto) {
+    const { email, password } = adminLoginDto;
+    
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if user is admin
+    if (!user.isAdmin) {
+      throw new UnauthorizedException('Access denied. Admin privileges required.');
+    }
+
+    // Check if user is Google OAuth user
+    if (user.authProvider === 'google') {
+      throw new BadRequestException('Please use Google Sign-In for this account');
+    }
+
+    // Check if user has a password
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await this.userService.validatePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new BadRequestException('Please verify your email before logging in');
+    }
+
+    const payload = { email: user.email, sub: (user as any)._id, isAdmin: true };
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      success: true,
+      access_token: accessToken,
+      user: {
+        id: (user as any)._id,
+        name: user.name,
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
+        isAdmin: user.isAdmin,
+      },
+    };
   }
 }

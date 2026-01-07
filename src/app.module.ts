@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { ChessOpeningModule } from './chess/chess-opening.module';
 import { PuzzlesModule } from './puzzles/puzzles.module';
 import { StockfishModule } from './stockfish/stockfish.module';
+import { LessonsModule } from './lessons/lessons.module';
+import { CoursesModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { StockfishModule } from './stockfish/stockfish.module';
     ChessOpeningModule,
     PuzzlesModule,
     StockfishModule,
+    LessonsModule,
+    CoursesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

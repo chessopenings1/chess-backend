@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class SignupDto {
   @IsNotEmpty()
@@ -12,6 +12,10 @@ export class SignupDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isAdmin?: boolean;
 }
 
 export class LoginDto {
@@ -31,4 +35,26 @@ export class GoogleAuthDto {
   @IsNotEmpty()
   @IsString()
   credential: string; // Google ID token
+}
+
+export class AdminSignupDto {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(2)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+}
+
+export class AdminLoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
 }

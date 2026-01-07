@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, ResendVerificationDto, GoogleAuthDto, AdminSignupDto, AdminLoginDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -29,5 +29,15 @@ export class AuthController {
   @Post('google')
   async googleAuth(@Body(ValidationPipe) googleAuthDto: GoogleAuthDto) {
     return this.authService.googleAuth(googleAuthDto);
+  }
+
+  @Post('admin/signup')
+  async adminSignup(@Body(ValidationPipe) adminSignupDto: AdminSignupDto) {
+    return this.authService.adminSignup(adminSignupDto);
+  }
+
+  @Post('admin/login')
+  async adminLogin(@Body(ValidationPipe) adminLoginDto: AdminLoginDto) {
+    return this.authService.adminLogin(adminLoginDto);
   }
 }
