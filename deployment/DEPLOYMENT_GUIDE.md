@@ -83,7 +83,7 @@ This guide explains how to deploy the Chess Backend NestJS application to an EC2
    Go to your GitHub repository → Settings → Secrets and variables → Actions
    
    Add the following secrets:
-   - `EC2_SSH_PRIVATE_KEY`: Your EC2 SSH private key
+   - `EC2_SSH_KEY`: Your EC2 SSH private key
    - `EC2_HOST`: Your EC2 instance IP or domain
    - `EC2_USER`: SSH user (usually `ubuntu` or `deploy`)
    - `EC2_DOMAIN`: (Optional) Your domain name for health checks
