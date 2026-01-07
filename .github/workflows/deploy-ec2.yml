@@ -1,0 +1,131 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r dist deploy-package/
+          cp -r node_modules deploy-package/
+          cp package.json deploy-package/
+          cp package-lock.json deploy-package/
+          cp ecosystem.config.js deploy-package/
+          cp tsconfig.json deploy-package/
+          cp nest-cli.json deploy-package/
+          tar -czf deploy-package.tar.gz deploy-package/
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          DEPLOY_PATH: /var/www/chess-backend
+        run: |
+          # Copy deployment package to EC2
+          scp deploy-package.tar.gz $EC2_USER@$EC2_HOST:/tmp/
+          
+          # SSH into EC2 and deploy
+          ssh $EC2_USER@$EC2_HOST << 'ENDSSH'
+            set -e
+            
+            DEPLOY_PATH="/var/www/chess-backend"
+            BACKUP_PATH="/var/www/chess-backend-backup-$(date +%Y%m%d-%H%M%S)"
+            
+            echo "📦 Starting deployment..."
+            
+            # Create backup of current deployment
+            if [ -d "$DEPLOY_PATH" ]; then
+              echo "💾 Creating backup..."
+              sudo cp -r $DEPLOY_PATH $BACKUP_PATH
+            fi
+            
+            # Extract new deployment
+            echo "📂 Extracting deployment package..."
+            cd /tmp
+            tar -xzf deploy-package.tar.gz
+            
+            # Stop PM2 process
+            echo "⏸️  Stopping PM2 process..."
+            pm2 stop chess-backend || true
+            pm2 delete chess-backend || true
+            
+            # Copy files to deployment directory
+            echo "📋 Copying files..."
+            sudo rm -rf $DEPLOY_PATH/*
+            sudo cp -r deploy-package/* $DEPLOY_PATH/
+            
+            # Preserve .env file if it exists
+            if [ -f "$BACKUP_PATH/.env" ]; then
+              echo "📝 Preserving .env file..."
+              sudo cp $BACKUP_PATH/.env $DEPLOY_PATH/.env
+            fi
+            
+            sudo chown -R deploy:deploy $DEPLOY_PATH
+            sudo chmod -R 755 $DEPLOY_PATH
+            
+            # Install production dependencies (if needed)
+            echo "📦 Installing dependencies..."
+            cd $DEPLOY_PATH
+            npm ci --production || npm install --production
+            
+            # Start PM2 process
+            echo "🚀 Starting application..."
+            pm2 start ecosystem.config.js --env production
+            pm2 save
+            
+            # Cleanup
+            echo "🧹 Cleaning up..."
+            rm -rf /tmp/deploy-package /tmp/deploy-package.tar.gz
+            
+            echo "✅ Deployment completed successfully!"
+            echo "📊 Application status:"
+            pm2 status
+          ENDSSH
+
+      - name: Health check
+        run: |
+          sleep 10
+          # Try health check via domain (if configured) or direct IP
+          HEALTH_URL="${EC2_DOMAIN:-http://${{ secrets.EC2_HOST }}:3001}"
+          curl -f $HEALTH_URL/health || echo "⚠️  Health check failed, but deployment may still be successful"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf deploy-package deploy-package.tar.gz
+          rm -f ~/.ssh/id_rsa

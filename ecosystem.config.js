@@ -5,26 +5,17 @@ module.exports = {
       script: 'dist/src/main.js',
       instances: 1, // or 'max' to use all CPU cores
       exec_mode: 'cluster',
+      // Environment variables are loaded from .env file via NestJS ConfigModule
+      // Do not hardcode secrets here - use .env file instead
+      // PM2 will pass through any env vars, but NestJS reads from .env file
       env: {
         NODE_ENV: 'development',
-        PORT: 3001,
-        MONGODB_URI: 'mongodb+srv://chessopenings1_db_user:1Q1f3QFtbtu5vEth@chess-dev.hr41aeu.mongodb.net/?retryWrites=true&w=majority&appName=Chess-dev',
-        JWT_SECRET: 'chessopeningssecret',
-        GOOGLE_CLIENT_ID: '415270921841-nbtcpthh99b9c4fr7t210tnujqf8oc3r.apps.googleusercontent.com'
       },
       env_production: {
         NODE_ENV: 'production',
-        PORT: 3001,
-        MONGODB_URI: 'mongodb://localhost:27017/chess-backend',
-        JWT_SECRET: 'your-production-jwt-secret-change-this',
-        GOOGLE_CLIENT_ID: '415270921841-nbtcpthh99b9c4fr7t210tnujqf8oc3r.apps.googleusercontent.com'
       },
       env_staging: {
         NODE_ENV: 'staging',
-        PORT: 3001,
-        MONGODB_URI: 'mongodb://localhost:27017/chess-backend-staging',
-        JWT_SECRET: 'your-staging-jwt-secret',
-        GOOGLE_CLIENT_ID: '415270921841-nbtcpthh99b9c4fr7t210tnujqf8oc3r.apps.googleusercontent.com'
       },
       // Logging
       log_file: './logs/combined.log',

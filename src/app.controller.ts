@@ -30,4 +30,13 @@ export class AppController {
       }
     };
   }
+
+  @Get('health')
+  getHealth() {
+    return {
+      success: true,
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
