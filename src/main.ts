@@ -15,10 +15,12 @@ async function bootstrap() {
   }));
   
   // Enable CORS for frontend integration
-  const allowedOrigins = configService.get<string>('NODE_ENV') === 'production' 
-    ? ['https://yourdomain.com', 'https://www.yourdomain.com'] // Add your production domains
-    : true; // Allow all origins in development
-  
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const corsOrigins = configService.get<string>('CORS_ORIGINS');
+  const allowedOrigins = isProduction
+    ? (corsOrigins ? corsOrigins.split(',').map(o => o.trim()) : [])
+    : true;
+
   app.enableCors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
