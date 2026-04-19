@@ -34,5 +34,8 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Chess Backend is running on: http://localhost:${port}`);
   console.log(`MongoDB URI: ${configService.get<string>('MONGODB_URI')?.substring(0, 50)}...`);
+  console.log(`NODE_ENV: ${configService.get<string>('NODE_ENV')}`);
+  console.log(`CORS_ORIGINS raw: "${corsOrigins}"`);
+  console.log(`Allowed origins:`, JSON.stringify(allowedOrigins));
 }
 bootstrap();
