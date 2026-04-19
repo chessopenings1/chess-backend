@@ -1,7 +1,7 @@
 # Chess Backend — NestJS Project Structure
 
 > Reference document for Claude. Describes architecture, modules, schemas, DTOs, services, and API contracts.
-> Foo
+> Foo, Bar
 ---
 
 ## Directory Tree (src/)
