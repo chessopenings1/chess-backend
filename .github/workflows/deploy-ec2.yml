@@ -107,14 +107,15 @@ jobs:
             sudo cp /tmp/chess-backend.env $DEPLOY_PATH/.env
             rm -f /tmp/chess-backend.env
             
-            sudo chown -R deploy:deploy $DEPLOY_PATH
+            sudo chown -R $(whoami):$(whoami) $DEPLOY_PATH
             sudo chmod -R 755 $DEPLOY_PATH
-            
+            mkdir -p $DEPLOY_PATH/logs
+
             # Install production dependencies (if needed)
             echo "📦 Installing dependencies..."
             cd $DEPLOY_PATH
             npm ci --production || npm install --production
-            
+
             # Start PM2 process
             echo "🚀 Starting application..."
             pm2 start ecosystem.config.js --env production
