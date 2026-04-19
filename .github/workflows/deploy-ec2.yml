@@ -44,6 +44,17 @@ jobs:
           cp nest-cli.json deploy-package/
           tar -czf deploy-package.tar.gz deploy-package/
 
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          PORT=${{ secrets.PORT || 3001 }}
+          NODE_ENV=production
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+          EOF
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -57,8 +68,9 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           DEPLOY_PATH: /var/www/chess-backend
         run: |
-          # Copy deployment package to EC2
+          # Copy deployment package and .env to EC2
           scp deploy-package.tar.gz $EC2_USER@$EC2_HOST:/tmp/
+          scp .env $EC2_USER@$EC2_HOST:/tmp/chess-backend.env
           
           # SSH into EC2 and deploy
           ssh $EC2_USER@$EC2_HOST << 'ENDSSH'
@@ -90,11 +102,10 @@ jobs:
             sudo rm -rf $DEPLOY_PATH/*
             sudo cp -r deploy-package/* $DEPLOY_PATH/
             
-            # Preserve .env file if it exists
-            if [ -f "$BACKUP_PATH/.env" ]; then
-              echo "📝 Preserving .env file..."
-              sudo cp $BACKUP_PATH/.env $DEPLOY_PATH/.env
-            fi
+            # Deploy .env from CI
+            echo "📝 Deploying .env file..."
+            sudo cp /tmp/chess-backend.env $DEPLOY_PATH/.env
+            rm -f /tmp/chess-backend.env
             
             sudo chown -R deploy:deploy $DEPLOY_PATH
             sudo chmod -R 755 $DEPLOY_PATH
